@@ -5,8 +5,8 @@ class ContaBancaria:
 
     def __init__(self, saldo_inicial=0):
         self.saldo = saldo_inicial
-        self.transacoes = []  
-        self.transacoes_diarias = {}  
+        self.transacoes = []  # Histórico de transações
+        self.transacoes_diarias = {}  # Dicionário para armazenar transações diárias
 
     def _registrar_transacao(self, tipo, valor):
         data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
