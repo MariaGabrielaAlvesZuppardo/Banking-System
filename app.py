@@ -2,8 +2,14 @@ from datetime import datetime
 
 class ContaBancaria:
     LIMITE_TRANSACOES_DIARIAS = 10
+    NUMERO_AGENCIA = "0001"
+    numero_conta_sequencial = 1  # Atributo de classe para gerar números de conta sequenciais
 
-    def __init__(self, saldo_inicial=0):
+    def __init__(self, usuario, saldo_inicial=0):
+        self.agencia = ContaBancaria.NUMERO_AGENCIA
+        self.numero_conta = ContaBancaria.numero_conta_sequencial
+        ContaBancaria.numero_conta_sequencial += 1  # Incrementar o número sequencial para a próxima conta
+        self.usuario = usuario
         self.saldo = saldo_inicial
         self.transacoes = []
         self.transacoes_diarias = {}
@@ -17,12 +23,6 @@ class ContaBancaria:
             self.transacoes_diarias[data_atual] = 0
         
         self.transacoes_diarias[data_atual] += 1
-
-    def _verificar_limite_transacoes(self):
-        data_atual = datetime.now().strftime("%Y-%m-%d")
-        if data_atual in self.transacoes_diarias:
-            return self.transacoes_diarias[data_atual] < self.LIMITE_TRANSACOES_DIARIAS
-        return True
 
     def depositar(self, valor):
         if valor > 0:
@@ -50,11 +50,14 @@ class ContaBancaria:
         extrato += f"Saldo atual: R${self.saldo:.2f}"
         return extrato
 
+    def __str__(self):
+        return f"Agência: {self.agencia}, Conta: {self.numero_conta}, Usuário: {self.usuario.nome}, Saldo: R${self.saldo:.2f}"
+
 class Cliente:
     def __init__(self, nome, data_nascimento, cpf, endereco):
         self.nome = nome
         self.data_nascimento = data_nascimento
-        self.cpf = cpf
+        self.cpf = ''.join(filter(str.isdigit, cpf))  # Armazenar apenas os números do CPF
         self.endereco = endereco
         self.contas = []
 
@@ -70,24 +73,34 @@ class Cliente:
 class Banco:
     def __init__(self):
         self.clientes = []
+        self.contas = []
 
     def cadastrar_cliente(self, nome, data_nascimento, cpf, endereco):
-        # Remover caracteres não numéricos do CPF
-        cpf_numeros = ''.join(filter(str.isdigit, cpf))
-        if self.buscar_cliente_por_cpf(cpf_numeros):
-            print(f"Erro: Já existe um cliente cadastrado com o CPF {cpf_numeros}.")
+        if self.buscar_cliente_por_cpf(cpf):
+            print(f"Erro: Já existe um cliente cadastrado com o CPF {cpf}.")
             return None
 
-        cliente = Cliente(nome, data_nascimento, cpf_numeros, endereco)
+        cliente = Cliente(nome, data_nascimento, cpf, endereco)
         self.clientes.append(cliente)
         print(f"Cliente {nome} cadastrado com sucesso.")
         return cliente
 
     def buscar_cliente_por_cpf(self, cpf):
+        cpf_numeros = ''.join(filter(str.isdigit, cpf))
         for cliente in self.clientes:
-            if cliente.cpf == cpf:
+            if cliente.cpf == cpf_numeros:
                 return cliente
         return None
+
+    def criar_conta_corrente(self, cliente, saldo_inicial=0):
+        if not isinstance(cliente, Cliente):
+            print("Cliente inválido. Deve ser um objeto da classe Cliente.")
+            return None
+        conta = ContaBancaria(cliente, saldo_inicial)
+        cliente.adicionar_conta(conta)
+        self.contas.append(conta)
+        print(f"Conta corrente criada para {cliente.nome} com saldo inicial de R${saldo_inicial:.2f}.")
+        return conta
 
 # Funções para operações bancárias
 
@@ -101,19 +114,6 @@ def criar_usuario(banco, nome, data_nascimento, cpf, endereco):
 
     cliente = banco.cadastrar_cliente(nome, data_nascimento, cpf, endereco)
     return cliente
-
-def criar_conta_corrente(banco, cliente, saldo_inicial=0):
-    if not isinstance(cliente, Cliente):
-        print("Cliente inválido. Deve ser um objeto da classe Cliente.")
-        return None
-    if not isinstance(saldo_inicial, (int, float)) or saldo_inicial < 0:
-        print("Saldo inicial inválido. Deve ser um número positivo ou zero.")
-        return None
-
-    conta = ContaBancaria(saldo_inicial)
-    cliente.adicionar_conta(conta)
-    print(f"Conta corrente criada com saldo inicial de R${saldo_inicial:.2f}.")
-    return conta
 
 def listar_contas(cliente):
     if not isinstance(cliente, Cliente):
@@ -159,19 +159,16 @@ def exibir_extrato(conta):
 if __name__ == "__main__":
     banco = Banco()
 
-    # Criar usuário
+    # Criar usuários
     cliente1 = criar_usuario(banco, "Maria Alves", "01/01/1980", "12345678900", "Rua A, 123 - Bairro B - Cidade C SP")
     cliente2 = criar_usuario(banco, "João Silva", "15/03/1990", "98765432100", "Avenida X, 456 - Bairro Y - Cidade Z RJ")
 
-    # Tentar cadastrar um cliente com o mesmo CPF
-    cliente_duplicado = criar_usuario(banco, "Ana Costa", "22/10/1985", "12345678900", "Rua D, 789 - Bairro E - Cidade F MG")
-
-    # Criar conta corrente
+    # Criar contas correntes
     if cliente1:
-        conta1 = criar_conta_corrente(banco, cliente1, 1000)
+        conta1 = banco.criar_conta_corrente(cliente1, 1000)
 
     if cliente2:
-        conta2 = criar_conta_corrente(banco, cliente2, 500)
+        conta2 = banco.criar_conta_corrente(cliente2, 500)
 
     # Listar contas do cliente
     if cliente1:
