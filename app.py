@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Union
 
-# Interface para Transações
+# Classe para Transação
 class Transacao:
     def __init__(self, tipo: str, valor: float):
         self.tipo = tipo
@@ -197,20 +197,104 @@ def exibir_extrato(conta: Conta):
     extrato = conta.visualizar_extrato()
     print(extrato)
 
-# Exemplo de uso
-if __name__ == "__main__":
+# Funções de Menu
+
+def criar_cliente(banco: Banco):
+    nome = input("Nome do cliente: ")
+    data_nascimento = input("Data de nascimento (dd/mm/aaaa): ")
+    cpf = input("CPF (apenas números): ")
+    endereco = input("Endereço (logradouro, nro - bairro - cidade sigla estado): ")
+
+    try:
+        data_nascimento = datetime.strptime(data_nascimento, "%d/%m/%Y")
+    except ValueError:
+        print("Data de nascimento inválida. Utilize o formato dd/mm/aaaa.")
+        return
+
+    cliente = criar_usuario(banco, nome, data_nascimento, cpf, endereco)
+    if cliente:
+        print(f"Cliente {cliente.nome} cadastrado com sucesso.")
+
+def criar_conta(banco: Banco):
+    cpf = input("CPF do cliente para criar a conta (apenas números): ")
+    saldo_inicial = input("Saldo inicial da conta: ")
+    
+    try:
+        saldo_inicial = float(saldo_inicial)
+    except ValueError:
+        print("Saldo inicial inválido. Deve ser um número.")
+        return
+
+    conta = banco.criar_conta_corrente_por_cpf(cpf, saldo_inicial)
+    if conta:
+        print(f"Conta criada com sucesso. Número da conta: {conta.numero}")
+
+def realizar_transacao(conta: Conta, tipo_transacao: str):
+    valor = input(f"Valor do {tipo_transacao.lower()}: ")
+
+    try:
+        valor = float(valor)
+    except ValueError:
+        print("Valor inválido. Deve ser um número.")
+        return
+
+    if tipo_transacao.lower() == "depósito":
+        mensagem = conta.depositar(valor)
+    elif tipo_transacao.lower() == "saque":
+        mensagem = conta.sacar(valor)
+    else:
+        print("Tipo de transação inválido.")
+        return
+
+    print(mensagem)
+
+def exibir_extrato(conta: Conta):
+    print(conta.visualizar_extrato())
+
+def main():
     banco = Banco()
 
-    # Criar usuários
-    cliente1 = criar_usuario(banco, "Maria Alves", datetime(1980, 1, 1), "12345678900", "Rua A, 123 - Bairro B - Cidade C SP")
+    while True:
+        print("\nMenu:")
+        print("1. Criar cliente")
+        print("2. Criar conta corrente")
+        print("3. Realizar depósito")
+        print("4. Realizar saque")
+        print("5. Exibir extrato")
+        print("6. Sair")
 
-    # Criar conta corrente
-    if cliente1:
-        conta1 = banco.criar_conta_corrente_por_cpf("12345678900", 1000)
+        opcao = input("Escolha uma opção: ")
 
-    # Realizar operações
-    if conta1:
-        realizar_deposito(conta1, 300)
-        realizar_saque(conta1, 100)
-        exibir_extrato(conta1)
+        if opcao == "1":
+            criar_cliente(banco)
+        elif opcao == "2":
+            criar_conta(banco)
+        elif opcao == "3":
+            cpf = input("CPF do cliente (apenas números): ")
+            conta = banco.buscar_cliente_por_cpf(cpf)
+            if conta:
+                realizar_transacao(conta, "Depósito")
+            else:
+                print("Cliente não encontrado.")
+        elif opcao == "4":
+            cpf = input("CPF do cliente (apenas números): ")
+            conta = banco.buscar_cliente_por_cpf(cpf)
+            if conta:
+                realizar_transacao(conta, "Saque")
+            else:
+                print("Cliente não encontrado.")
+        elif opcao == "5":
+            cpf = input("CPF do cliente (apenas números): ")
+            conta = banco.buscar_cliente_por_cpf(cpf)
+            if conta:
+                exibir_extrato(conta)
+            else:
+                print("Cliente não encontrado.")
+        elif opcao == "6":
+            print("Saindo...")
+            break
+        else:
+            print("Opção inválida. Tente novamente.")
 
+if __name__ == "__main__":
+    main()

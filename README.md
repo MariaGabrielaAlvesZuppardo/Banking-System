@@ -1,66 +1,48 @@
 # Sistema Bancário em Python
 
-## Descrição do Projeto
-
-Este projeto implementa um sistema bancário básico em Python, que permite a criação de usuários, gerenciamento de contas bancárias, realização de transações (depósitos e saques), e visualização de extratos. O sistema foi desenvolvido utilizando conceitos de orientação a objetos e boas práticas de programação.
+Este projeto implementa um sistema bancário básico em Python utilizando princípios de Orientação a Objetos. O sistema permite o gerenciamento de clientes e contas bancárias, incluindo a criação de clientes, abertura de contas e a realização de transações como depósitos e saques.
 
 ## Funcionalidades
 
-- **Cadastro de Usuários:** Criação de novos usuários com os seguintes dados:
-  - Nome
-  - Data de nascimento
-  - CPF (apenas números)
-  - Endereço (no formato: "logradouro, nro - bairro - cidade sigla estado")
+- **Cadastro de Clientes**: Permite a criação de novos clientes com informações como nome, data de nascimento, CPF e endereço.
+- **Criação de Contas Bancárias**: Cria contas bancárias associadas a clientes existentes. O número da conta é gerado sequencialmente.
+- **Realização de Transações**: Permite realizar depósitos e saques em contas bancárias, com um limite diário de transações.
+- **Visualização de Extrato**: Exibe o histórico de transações e o saldo atual de uma conta.
 
-- **Gerenciamento de Contas:** Cada usuário pode ter uma ou mais contas bancárias, que incluem:
-  - Número da agência (fixo: "0001")
-  - Número da conta (sequencial, começando em 1)
-  - Saldo inicial
+## Estrutura das Classes
 
-- **Operações Bancárias:**
-  - Depósitos em conta
-  - Saques de conta (respeitando o saldo disponível)
-  - Limite de transações diárias
+### `Transacao`
+Representa uma transação bancária com tipo (depósito ou saque) e valor. Inclui a data e hora da transação.
 
-- **Visualização de Extratos:** Mostra todas as transações realizadas em uma conta específica e o saldo atual.
+### `Historico`
+Gerencia as transações realizadas em uma conta. Armazena um histórico completo de todas as transações.
 
-## Requisitos
+### `Conta`
+Representa uma conta bancária com saldo, número da conta, agência fixa e histórico de transações. Permite depósitos, saques e visualização do extrato. Controla o limite diário de transações.
 
-- Python 3.x
+### `Cliente`
+Base para clientes do sistema. Armazena informações pessoais e uma lista de contas associadas.
 
-## Instalação
+### `PessoaFisica`
+Subclasse de `Cliente`, representa clientes individuais com CPF. Armazena o CPF como uma string numérica.
 
-Clone o repositório para o seu ambiente local:
+### `Banco`
+Gerencia clientes e contas bancárias. Permite o cadastro de novos clientes, criação de contas e busca de clientes por CPF.
+
+## Funcionalidades de Menu
+
+O menu interativo permite ao usuário:
+
+1. **Criar Cliente**: Adiciona um novo cliente ao banco.
+2. **Criar Conta Corrente**: Abre uma nova conta para um cliente existente.
+3. **Realizar Depósito**: Adiciona fundos à conta bancária.
+4. **Realizar Saque**: Retira fundos da conta bancária.
+5. **Exibir Extrato**: Mostra o extrato e o saldo atual da conta.
+6. **Sair**: Encerra o programa.
+
+## Uso
+
+Para executar o sistema, execute o script principal:
 
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
-
-Navegue até o diretório do projeto:
-
-bash
-
-cd <NOME_DO_DIRETORIO_DO_PROJETO>
-
-Como Usar
-
-    Executar o programa principal:
-
-    Para rodar o sistema bancário, execute o arquivo principal do projeto:
-
-    bash
-
-python <nome_do_arquivo_principal>.py
-
-Cadastro de Usuários:
-
-Use a função criar_usuario() para cadastrar um novo usuário no sistema, fornecendo nome, data de nascimento, CPF e endereço.
-
-Criação de Contas:
-
-Utilize a função criar_conta_corrente_por_cpf() passando o CPF do usuário para criar uma nova conta bancária vinculada ao usuário.
-
-Operações Bancárias:
-
-    Para realizar depósitos, use a função realizar_deposito().
-    Para saques, utilize realizar_saque().
-    Para visualizar o extrato, use exibir_extrato().
+python main.py
