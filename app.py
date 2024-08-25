@@ -92,10 +92,12 @@ class Banco:
                 return cliente
         return None
 
-    def criar_conta_corrente(self, cliente, saldo_inicial=0):
-        if not isinstance(cliente, Cliente):
-            print("Cliente inválido. Deve ser um objeto da classe Cliente.")
+    def criar_conta_corrente_por_cpf(self, cpf, saldo_inicial=0):
+        cliente = self.buscar_cliente_por_cpf(cpf)
+        if not cliente:
+            print(f"Erro: Não foi encontrado nenhum cliente com o CPF {cpf}.")
             return None
+
         conta = ContaBancaria(cliente, saldo_inicial)
         cliente.adicionar_conta(conta)
         self.contas.append(conta)
@@ -163,12 +165,12 @@ if __name__ == "__main__":
     cliente1 = criar_usuario(banco, "Maria Alves", "01/01/1980", "12345678900", "Rua A, 123 - Bairro B - Cidade C SP")
     cliente2 = criar_usuario(banco, "João Silva", "15/03/1990", "98765432100", "Avenida X, 456 - Bairro Y - Cidade Z RJ")
 
-    # Criar contas correntes
+    # Criar conta corrente usando o CPF do cliente
     if cliente1:
-        conta1 = banco.criar_conta_corrente(cliente1, 1000)
+        conta1 = banco.criar_conta_corrente_por_cpf("12345678900", 1000)
 
     if cliente2:
-        conta2 = banco.criar_conta_corrente(cliente2, 500)
+        conta2 = banco.criar_conta_corrente_por_cpf("98765432100", 500)
 
     # Listar contas do cliente
     if cliente1:
