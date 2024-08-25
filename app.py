@@ -25,35 +25,30 @@ class ContaBancaria:
         return True
 
     def depositar(self, valor):
-        if self._verificar_limite_transacoes():
-            if valor > 0:
-                self.saldo += valor
-                self._registrar_transacao("Depósito", valor)
-                print(f"Depósito de R${valor:.2f} realizado com sucesso.")
-            else:
-                print("O valor do depósito deve ser positivo.")
+        if valor > 0:
+            self.saldo += valor
+            self._registrar_transacao("Depósito", valor)
+            return f"Depósito de R${valor:.2f} realizado com sucesso."
         else:
-            print("Você excedeu o número de transações permitidas para hoje.")
+            return "O valor do depósito deve ser positivo."
 
     def sacar(self, valor):
-        if self._verificar_limite_transacoes():
-            if valor > 0:
-                if valor <= self.saldo:
-                    self.saldo -= valor
-                    self._registrar_transacao("Saque", valor)
-                    print(f"Saque de R${valor:.2f} realizado com sucesso.")
-                else:
-                    print("Saldo insuficiente para realizar o saque.")
+        if valor > 0:
+            if valor <= self.saldo:
+                self.saldo -= valor
+                self._registrar_transacao("Saque", valor)
+                return f"Saque de R${valor:.2f} realizado com sucesso."
             else:
-                print("O valor do saque deve ser positivo.")
+                return "Saldo insuficiente para realizar o saque."
         else:
-            print("Você excedeu o número de transações permitidas para hoje.")
+            return "O valor do saque deve ser positivo."
 
     def visualizar_extrato(self):
-        print("\nExtrato da Conta:")
+        extrato = "\nExtrato da Conta:\n"
         for transacao in self.transacoes:
-            print(transacao)
-        print(f"Saldo atual: R${self.saldo:.2f}")
+            extrato += f"{transacao}\n"
+        extrato += f"Saldo atual: R${self.saldo:.2f}"
+        return extrato
 
 class Cliente:
     def __init__(self, nome, cpf):
@@ -63,6 +58,9 @@ class Cliente:
 
     def adicionar_conta(self, conta):
         self.contas.append(conta)
+
+    def listar_contas(self):
+        return [str(conta) for conta in self.contas]
 
     def __str__(self):
         return f"Cliente: {self.nome}, CPF: {self.cpf}"
@@ -75,27 +73,96 @@ class Banco:
     def cadastrar_cliente(self, nome, cpf):
         cliente = Cliente(nome, cpf)
         self.clientes.append(cliente)
-        print(f"Cliente {nome} cadastrado com sucesso.")
         return cliente
 
     def cadastrar_conta_bancaria(self, cliente, saldo_inicial=0):
         conta = ContaBancaria(saldo_inicial)
         cliente.adicionar_conta(conta)
         self.contas.append(conta)
-        print(f"Conta bancária criada com saldo inicial de R${saldo_inicial:.2f}.")
         return conta
+
+# Funções para operações bancárias
+
+def criar_usuario(banco, nome, cpf):
+    if not isinstance(nome, str) or not nome:
+        print("Nome inválido. Deve ser uma string não vazia.")
+        return None
+    if not isinstance(cpf, str) or not cpf.isdigit() or len(cpf) != 11:
+        print("CPF inválido. Deve ser uma string numérica de 11 dígitos.")
+        return None
+
+    cliente = banco.cadastrar_cliente(nome, cpf)
+    print(f"Cliente {nome} cadastrado com sucesso.")
+    return cliente
+
+def criar_conta_corrente(banco, cliente, saldo_inicial=0):
+    if not isinstance(cliente, Cliente):
+        print("Cliente inválido. Deve ser um objeto da classe Cliente.")
+        return None
+    if not isinstance(saldo_inicial, (int, float)) or saldo_inicial < 0:
+        print("Saldo inicial inválido. Deve ser um número positivo ou zero.")
+        return None
+
+    conta = banco.cadastrar_conta_bancaria(cliente, saldo_inicial)
+    print(f"Conta corrente criada com saldo inicial de R${saldo_inicial:.2f}.")
+    return conta
+
+def listar_contas(cliente):
+    if not isinstance(cliente, Cliente):
+        print("Cliente inválido. Deve ser um objeto da classe Cliente.")
+        return
+
+    contas = cliente.listar_contas()
+    print(f"Contas do cliente {cliente.nome}:")
+    for i, conta in enumerate(contas, 1):
+        print(f"Conta {i}: {conta}")
+
+def realizar_deposito(conta, valor):
+    if not isinstance(conta, ContaBancaria):
+        print("Conta inválida. Deve ser um objeto da classe ContaBancaria.")
+        return
+    if not isinstance(valor, (int, float)) or valor <= 0:
+        print("Valor de depósito inválido. Deve ser um número positivo.")
+        return
+
+    mensagem = conta.depositar(valor)
+    print(mensagem)
+
+def realizar_saque(conta, valor):
+    if not isinstance(conta, ContaBancaria):
+        print("Conta inválida. Deve ser um objeto da classe ContaBancaria.")
+        return
+    if not isinstance(valor, (int, float)) or valor <= 0:
+        print("Valor de saque inválido. Deve ser um número positivo.")
+        return
+
+    mensagem = conta.sacar(valor)
+    print(mensagem)
+
+def exibir_extrato(conta):
+    if not isinstance(conta, ContaBancaria):
+        print("Conta inválida. Deve ser um objeto da classe ContaBancaria.")
+        return
+
+    extrato = conta.visualizar_extrato()
+    print(extrato)
 
 # Exemplo de uso
 if __name__ == "__main__":
     banco = Banco()
 
-    # Cadastrar cliente
-    cliente = banco.cadastrar_cliente("Maria Alves", "123.456.789-00")
+    # Criar usuário
+    cliente = criar_usuario(banco, "Maria Alves", "12345678900")
 
-    # Cadastrar conta bancária
-    conta = banco.cadastrar_conta_bancaria(cliente, 1000)
+    # Criar conta corrente
+    conta1 = criar_conta_corrente(banco, cliente, 1000)
+    conta2 = criar_conta_corrente(banco, cliente, 500)
+
+    # Listar contas do cliente
+    listar_contas(cliente)
 
     # Realizar operações
-    conta.depositar(500)
-    conta.sacar(200)
-    conta.visualizar_extrato()
+    realizar_deposito(conta1, 500)
+    realizar_saque(conta1, 200)
+    exibir_extrato(conta1)
+
