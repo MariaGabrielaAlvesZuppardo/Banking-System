@@ -51,9 +51,11 @@ class ContaBancaria:
         return extrato
 
 class Cliente:
-    def __init__(self, nome, cpf):
+    def __init__(self, nome, data_nascimento, cpf, endereco):
         self.nome = nome
+        self.data_nascimento = data_nascimento
         self.cpf = cpf
+        self.endereco = endereco
         self.contas = []
 
     def adicionar_conta(self, conta):
@@ -63,27 +65,33 @@ class Cliente:
         return [str(conta) for conta in self.contas]
 
     def __str__(self):
-        return f"Cliente: {self.nome}, CPF: {self.cpf}"
+        return f"Cliente: {self.nome}, CPF: {self.cpf}, Endereço: {self.endereco}"
 
 class Banco:
     def __init__(self):
         self.clientes = []
-        self.contas = []
 
-    def cadastrar_cliente(self, nome, cpf):
-        cliente = Cliente(nome, cpf)
+    def cadastrar_cliente(self, nome, data_nascimento, cpf, endereco):
+        # Remover caracteres não numéricos do CPF
+        cpf_numeros = ''.join(filter(str.isdigit, cpf))
+        if self.buscar_cliente_por_cpf(cpf_numeros):
+            print(f"Erro: Já existe um cliente cadastrado com o CPF {cpf_numeros}.")
+            return None
+
+        cliente = Cliente(nome, data_nascimento, cpf_numeros, endereco)
         self.clientes.append(cliente)
+        print(f"Cliente {nome} cadastrado com sucesso.")
         return cliente
 
-    def cadastrar_conta_bancaria(self, cliente, saldo_inicial=0):
-        conta = ContaBancaria(saldo_inicial)
-        cliente.adicionar_conta(conta)
-        self.contas.append(conta)
-        return conta
+    def buscar_cliente_por_cpf(self, cpf):
+        for cliente in self.clientes:
+            if cliente.cpf == cpf:
+                return cliente
+        return None
 
 # Funções para operações bancárias
 
-def criar_usuario(banco, nome, cpf):
+def criar_usuario(banco, nome, data_nascimento, cpf, endereco):
     if not isinstance(nome, str) or not nome:
         print("Nome inválido. Deve ser uma string não vazia.")
         return None
@@ -91,8 +99,7 @@ def criar_usuario(banco, nome, cpf):
         print("CPF inválido. Deve ser uma string numérica de 11 dígitos.")
         return None
 
-    cliente = banco.cadastrar_cliente(nome, cpf)
-    print(f"Cliente {nome} cadastrado com sucesso.")
+    cliente = banco.cadastrar_cliente(nome, data_nascimento, cpf, endereco)
     return cliente
 
 def criar_conta_corrente(banco, cliente, saldo_inicial=0):
@@ -103,7 +110,8 @@ def criar_conta_corrente(banco, cliente, saldo_inicial=0):
         print("Saldo inicial inválido. Deve ser um número positivo ou zero.")
         return None
 
-    conta = banco.cadastrar_conta_bancaria(cliente, saldo_inicial)
+    conta = ContaBancaria(saldo_inicial)
+    cliente.adicionar_conta(conta)
     print(f"Conta corrente criada com saldo inicial de R${saldo_inicial:.2f}.")
     return conta
 
@@ -152,17 +160,25 @@ if __name__ == "__main__":
     banco = Banco()
 
     # Criar usuário
-    cliente = criar_usuario(banco, "Maria Alves", "12345678900")
+    cliente1 = criar_usuario(banco, "Maria Alves", "01/01/1980", "12345678900", "Rua A, 123 - Bairro B - Cidade C SP")
+    cliente2 = criar_usuario(banco, "João Silva", "15/03/1990", "98765432100", "Avenida X, 456 - Bairro Y - Cidade Z RJ")
+
+    # Tentar cadastrar um cliente com o mesmo CPF
+    cliente_duplicado = criar_usuario(banco, "Ana Costa", "22/10/1985", "12345678900", "Rua D, 789 - Bairro E - Cidade F MG")
 
     # Criar conta corrente
-    conta1 = criar_conta_corrente(banco, cliente, 1000)
-    conta2 = criar_conta_corrente(banco, cliente, 500)
+    if cliente1:
+        conta1 = criar_conta_corrente(banco, cliente1, 1000)
+
+    if cliente2:
+        conta2 = criar_conta_corrente(banco, cliente2, 500)
 
     # Listar contas do cliente
-    listar_contas(cliente)
+    if cliente1:
+        listar_contas(cliente1)
 
     # Realizar operações
-    realizar_deposito(conta1, 500)
-    realizar_saque(conta1, 200)
-    exibir_extrato(conta1)
-
+    if conta1:
+        realizar_deposito(conta1, 300)
+        realizar_saque(conta1, 100)
+        exibir_extrato(conta1)
